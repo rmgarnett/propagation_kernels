@@ -2,6 +2,7 @@
 #include "matrix.h"
 
 #include <math.h>
+#include <string.h>
 
 #include <iostream>
 using std::cout;
@@ -37,10 +38,10 @@ void mexFunction(int nlhs, mxArray *plhs[],
 {
 	mwIndex *A_ir, *A_jc;
 	double *graph_ind, *labels_in, *h_in, *kernel_matrix;
-	int h, *labels;
+	int h, *labels, *new_labels;
 
-	int i, j, k, row, column, count, offset, iteration, num_nodes, num_labels, num_new_labels, num_graphs,
-		num_elements_this_column, index, *counts;
+	int i, j, k, count, iteration;
+	int num_nodes, num_labels, num_new_labels, num_graphs, num_neighbors, *counts;
 
 	double *feature_vectors;
 
@@ -78,6 +79,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
 
 	feature_vectors = NULL;
 	counts          = NULL;
+	new_labels      = new int[num_nodes];
 
 	iteration = 0;
 	while (true) {
@@ -95,39 +97,38 @@ void mexFunction(int nlhs, mxArray *plhs[],
 			break;
 
 		delete[] counts;
-		counts = new int[num_nodes * num_labels];
-		for (i = 0; i < num_nodes * num_labels; i++)
-			counts[i] = 0;
-
- 		count = 0;
-		for (column = 0; column < num_nodes; column++) {
-			num_elements_this_column = A_jc[column + 1] - A_jc[column];
-			for (i = 0; i < num_elements_this_column; i++, count++) {
-				row = A_ir[count];
-				counts[INDEX(row, labels[column] - 1, num_nodes)]++;
-			}
-		}
+		counts = new int[num_labels];
 
 		num_new_labels = 0;
+		count = 0;
 		for (i = 0; i < num_nodes; i++) {
+
+			for (j = 0; j < num_labels; j++)
+				counts[j] = 0;
+
+			num_neighbors = A_jc[i + 1] - A_jc[i];
+			for (j = 0; j < num_neighbors; j++, count++)
+				counts[labels[A_ir[count]] - 1]++;
+
 			ostringstream signature;
 			signature << labels[i];
 
 			for (j = 0; j < num_labels; j++)
-				if (counts[INDEX(i, j, num_nodes)])
-					signature << " " << j << " " << counts[INDEX(i, j, num_nodes)];
+				signature << " " << j << " " << counts[j];
 
 			if (signature_hash.count(signature.str()) == 0) {
 				num_new_labels++;
-				labels[i] = num_new_labels;
-				signature_hash[signature.str()] = num_labels;
+				new_labels[i] = num_new_labels;
+				signature_hash[signature.str()] = num_new_labels;
 			}
 			else
-				labels[i] = signature_hash[signature.str()];
+				new_labels[i] = signature_hash[signature.str()];
 		}
 		signature_hash.clear();
 
 		num_labels = num_new_labels;
+		memcpy(new_labels, labels, num_nodes * sizeof(int));
+
 		iteration++;
 	}
 
