@@ -27,8 +27,7 @@ extern "C" {
 #define GRAPH_IND_ARG      prhs[0]
 #define PROBABILITIES_ARG  prhs[1]
 #define W_ARG              prhs[2]
-#define NUM_VECTORS_ARG    prhs[3]
-#define SQRT_FLAG_ARG      prhs[4]
+#define SQRT_FLAG_ARG      prhs[3]
 
 #define KERNEL_MATRIX_ARG  plhs[0]
 
@@ -37,44 +36,40 @@ extern "C" {
 void mexFunction(int nlhs, mxArray *plhs[],
 								 int nrhs, const mxArray *prhs[])
 {
-	double *graph_ind, *probabilities, *w_in, *num_vectors_in, *kernel_matrix;
+	double *graph_ind, *probabilities, *w_in, *kernel_matrix;
 	mxLogical *sqrt_flag_in;
 
 	double w;
-	int num_vectors;
 	bool sqrt_flag;
 
 	int i, j, count, num_nodes, num_labels, num_graphs, *labels;
-	float *random_offsets, *signatures;
-	double *feature_vectors, b;
+	double *random_offsets, *signatures, *feature_vectors, b;
 
-	unordered_map<float, int, hash<float> > signature_hash;
+	unordered_map<double, int, hash<double> > signature_hash;
 
 	base_generator_type generator(0);
 
-	uniform_real<float> uniform(0, 1);
-	variate_generator<base_generator_type&, uniform_real<float> >
+	uniform_real<double> uniform(0, 1);
+	variate_generator<base_generator_type&, uniform_real<double> >
 		rand(generator, uniform);
 
-	normal_distribution<float> normal(0, 1);
-	variate_generator<base_generator_type&, normal_distribution<float> >
+	normal_distribution<double> normal(0, 1);
+	variate_generator<base_generator_type&, normal_distribution<double> >
 		randn(generator, normal);
 
 	graph_ind      = mxGetPr(GRAPH_IND_ARG);
 	probabilities  = mxGetPr(PROBABILITIES_ARG);
 	w_in           = mxGetPr(W_ARG);
-	num_vectors_in = mxGetPr(NUM_VECTORS_ARG);
 	sqrt_flag_in   = mxGetLogicals(SQRT_FLAG_ARG);
 
 	/* dereference to avoid annoying casting and indexing */
-	w           = w_in[0];
-	sqrt_flag   = sqrt_flag_in[0];
-	num_vectors = (int)(num_vectors_in[0] + 0.5);
+	w          = w_in[0];
+	sqrt_flag  = sqrt_flag_in[0];
 
 	num_nodes  = mxGetM(PROBABILITIES_ARG);
 	num_labels = mxGetN(PROBABILITIES_ARG);
 
-	labels = new int[num_nodes]();
+	labels = new int[num_nodes];
 
 	num_graphs = 0;
 	for (i = 0; i < num_nodes; i++) {
@@ -85,10 +80,10 @@ void mexFunction(int nlhs, mxArray *plhs[],
 	KERNEL_MATRIX_ARG = mxCreateDoubleMatrix(num_graphs, num_graphs, mxREAL);
 	kernel_matrix = mxGetPr(KERNEL_MATRIX_ARG);
 
-	signatures = new float[num_nodes];
+	signatures = new double[num_nodes];
 
-	random_offsets = new float[(num_labels - 1) * num_vectors];
-	for (i = 0; i < (num_labels - 1) * num_vectors; i++)
+	random_offsets = new double[num_labels - 1];
+	for (i = 0; i < num_labels - 1; i++)
 		random_offsets[i] = randn();
 
 	b = rand() * w;
@@ -96,14 +91,8 @@ void mexFunction(int nlhs, mxArray *plhs[],
 	for (i = 0; i < num_nodes; i++)
 		signatures[i] = b;
 
-	count = 0;
-	for (j = 0; j < num_labels - 1; j++) {
-		for (i = 0; i < num_nodes; i++, count++)
-			if (sqrt_flag)
-				signatures[i] += sqrt(probabilities[count]) * random_offsets[j];
-			else
-				signatures[i] +=      probabilities[count]  * random_offsets[j];
-	}
+	cblas_dgemm(CblasColMajor, CblasNoTrans, CblasNoTrans, num_nodes, 1, num_labels - 1, 1,
+							probabilities, num_nodes, random_offsets, num_labels - 1, 1, signatures, num_nodes);
 
 	for (i = 0; i < num_nodes; i++)
 		signatures[i] = floor(signatures[i] / w);
