@@ -16,6 +16,7 @@ using std::tr1::unordered_map;
 using boost::uniform_real;
 using boost::normal_distribution;
 using boost::variate_generator;
+using boost::cauchy_distribution;
 
 typedef boost::mt19937 base_generator_type;
 
@@ -27,20 +28,19 @@ extern "C" {
 #define GRAPH_IND_ARG      prhs[0]
 #define PROBABILITIES_ARG  prhs[1]
 #define W_ARG              prhs[2]
-#define SQRT_FLAG_ARG      prhs[3]
+#define P_ARG              prhs[3]
 
 #define KERNEL_MATRIX_ARG  plhs[0]
 
 #define INDEX(row, column, num_rows) ((int)(row) + ((int)(num_rows) * (int)(column)))
+#define ROUND_TO_INT(x) ((int)((x) + 0.5))
 
 void mexFunction(int nlhs, mxArray *plhs[],
 								 int nrhs, const mxArray *prhs[])
 {
-	double *graph_ind, *probabilities, *w_in, *kernel_matrix;
-	mxLogical *sqrt_flag_in;
-
+	double *graph_ind, *probabilities, *w_in, *p_in, *kernel_matrix;
 	double w;
-	bool sqrt_flag;
+	int p;
 
 	int i, j, count, num_nodes, num_labels, num_graphs, *labels;
 	double *random_offsets, *signatures, *feature_vectors, b;
@@ -49,7 +49,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
 
 	base_generator_type generator(0);
 
-	uniform_real<double> uniform(0, 1);
+	uniform_real<double>        uniform(0, 1);
 	variate_generator<base_generator_type&, uniform_real<double> >
 		rand(generator, uniform);
 
@@ -57,14 +57,18 @@ void mexFunction(int nlhs, mxArray *plhs[],
 	variate_generator<base_generator_type&, normal_distribution<double> >
 		randn(generator, normal);
 
-	graph_ind      = mxGetPr(GRAPH_IND_ARG);
-	probabilities  = mxGetPr(PROBABILITIES_ARG);
-	w_in           = mxGetPr(W_ARG);
-	sqrt_flag_in   = mxGetLogicals(SQRT_FLAG_ARG);
+	cauchy_distribution<double> cauchy(0, 1);
+	variate_generator<base_generator_type&, cauchy_distribution<double> >
+		randc(generator, cauchy);
 
+	graph_ind     = mxGetPr(GRAPH_IND_ARG);
+	probabilities = mxGetPr(PROBABILITIES_ARG);
+	w_in          = mxGetPr(W_ARG);
+	p_in          = mxGetPr(P_ARG);
+	
 	/* dereference to avoid annoying casting and indexing */
-	w          = w_in[0];
-	sqrt_flag  = sqrt_flag_in[0];
+	w = w_in[0];
+	p = ROUND_TO_INT(p_in[0]);
 
 	num_nodes  = mxGetM(PROBABILITIES_ARG);
 	num_labels = mxGetN(PROBABILITIES_ARG);
@@ -72,10 +76,9 @@ void mexFunction(int nlhs, mxArray *plhs[],
 	labels = new int[num_nodes];
 
 	num_graphs = 0;
-	for (i = 0; i < num_nodes; i++) {
-		if ((int)(graph_ind[i] + 0.5) > num_graphs)
-			num_graphs = (int)(graph_ind[i] + 0.5);
-	}
+	for (i = 0; i < num_nodes; i++)
+		if (ROUND_TO_INT(graph_ind[i]) > num_graphs)
+			num_graphs = ROUND_TO_INT(graph_ind[i]);
 
 	KERNEL_MATRIX_ARG = mxCreateDoubleMatrix(num_graphs, num_graphs, mxREAL);
 	kernel_matrix = mxGetPr(KERNEL_MATRIX_ARG);
@@ -84,8 +87,11 @@ void mexFunction(int nlhs, mxArray *plhs[],
 
 	random_offsets = new double[num_labels - 1];
 	for (i = 0; i < num_labels - 1; i++)
-		random_offsets[i] = randn();
-
+		if (p == 1)
+			random_offsets[i] = randc();
+		else
+			random_offsets[i] = randn();
+	
 	b = rand() * w;
 
 	for (i = 0; i < num_nodes; i++)

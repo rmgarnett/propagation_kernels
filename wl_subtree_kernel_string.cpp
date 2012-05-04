@@ -99,6 +99,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
 		delete[] counts;
 		counts = new int[num_labels];
 
+		signature_hash.clear();
 		num_new_labels = 0;
 		count = 0;
 		for (i = 0; i < num_nodes; i++) {
@@ -117,18 +118,16 @@ void mexFunction(int nlhs, mxArray *plhs[],
 				signature << " " << j << " " << counts[j];
 
 			if (signature_hash.count(signature.str()) == 0) {
-				num_new_labels++;
-				new_labels[i] = num_new_labels;
+				new_labels[i] = ++num_new_labels;
 				signature_hash[signature.str()] = num_new_labels;
 			}
 			else
 				new_labels[i] = signature_hash[signature.str()];
 		}
-		signature_hash.clear();
 
 		num_labels = num_new_labels;
-		memcpy(new_labels, labels, num_nodes * sizeof(int));
-
+		memcpy(labels, new_labels, num_nodes * sizeof(int));
+		
 		iteration++;
 	}
 

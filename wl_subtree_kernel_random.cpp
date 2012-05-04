@@ -1,8 +1,7 @@
 #include "mex.h"
 #include "matrix.h"
-
 #include <math.h>
-
+#include <string.h>
 #include <iostream>
 using std::cout;
 using std::endl;
@@ -40,18 +39,17 @@ void mexFunction(int nlhs, mxArray *plhs[],
 	double *graph_ind, *labels_in, *h_in, *kernel_matrix;
 	int h, *labels;
 
-	int i, j, k, row, column, count, offset, iteration, num_nodes, num_labels, num_graphs,
-		num_elements_this_column, index;
+	int i, j, count, iteration, num_nodes, num_labels, num_new_labels, num_graphs,
+		num_neighbors, *new_labels;
 
-	float *random_offsets, *signatures;
-	double *feature_vectors;
+	double *feature_vectors, *random_offsets, signature;
 
-	unordered_map<float, int, hash<float> > signature_hash;
+	unordered_map<double, int, hash<double> > signature_hash;
 
 	base_generator_type generator(0);
 
-	uniform_real<float> uniform_distribution(0, 1);
-	boost::variate_generator<base_generator_type&, boost::uniform_real<float> >
+	uniform_real<double> uniform_distribution(0, 1);
+	variate_generator<base_generator_type&, uniform_real<double> >
 		rand(generator, uniform_distribution);
 
 	A_ir      = mxGetIr(A_ARG);
@@ -85,8 +83,8 @@ void mexFunction(int nlhs, mxArray *plhs[],
 	kernel_matrix = mxGetPr(KERNEL_MATRIX_ARG);
 
 	feature_vectors = NULL;
-	signatures      = new float[num_nodes];
-	random_offsets  = new float[num_nodes];
+	new_labels      = new int[num_nodes];
+	random_offsets  = new double[num_nodes];
 	for (i = 0; i < num_nodes; i++)
 		random_offsets[i] = rand();
 
@@ -105,35 +103,33 @@ void mexFunction(int nlhs, mxArray *plhs[],
 		if (iteration == h)
 			break;
 
-		for (i = 0; i < num_nodes; i++)
-			signatures[i] = (float)(labels[i]);
-
- 		count = 0;
-		for (column = 0; column < num_nodes; column++) {
-			num_elements_this_column = A_jc[column + 1] - A_jc[column];
-			for (i = 0; i < num_elements_this_column; i++, count++) {
-				row = A_ir[count];
-				signatures[row] += random_offsets[labels[column] - 1];
-			}
-		}
-
-		num_labels = 0;
+		count = 0;
+		num_new_labels = 0;
+		signature_hash.clear();
 		for (i = 0; i < num_nodes; i++) {
-			if (signature_hash.count(signatures[i]) == 0) {
-				num_labels++;
-				labels[i] = num_labels;
-				signature_hash[signatures[i]] = num_labels;
+			signature = (double)(labels[i]);
+			
+			num_neighbors = A_jc[i + 1] - A_jc[i];
+			for (j = 0; j < num_neighbors; j++, count++)
+				signature += random_offsets[labels[A_ir[count]] - 1];
+
+			if (signature_hash.count(signature) == 0) {
+				new_labels[i] = ++num_new_labels;
+				signature_hash[signature] = num_new_labels;
 			}
 			else
-				labels[i] = signature_hash[signatures[i]];
+				new_labels[i] = signature_hash[signature];
 		}
-		signature_hash.clear();
 
+		num_labels = num_new_labels;
+		memcpy(labels, new_labels, num_nodes * sizeof(int));
+		
 		iteration++;
 	}
 
 	delete[] labels;
+	delete[] new_labels;
 	delete[] feature_vectors;
 	delete[] random_offsets;
-	delete[] signatures;
+
 }
