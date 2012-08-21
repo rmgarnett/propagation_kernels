@@ -1,7 +1,7 @@
 import numpy
 from ctypes import *
 
-lib = cdll.LoadLibrary('propagation_kernel.dylib')
+lib = cdll.LoadLibrary('propagation_kernel.so')
 lib.propagation_kernel.restype  = None
 lib.propagation_kernel.argtypes = [POINTER(c_int),
                                    POINTER(c_double),
