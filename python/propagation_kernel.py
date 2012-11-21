@@ -24,13 +24,13 @@ def compute(graph_ind, probabilities, w, p):
     probabilities = numpy.asfortranarray(probabilities, float)
     K             = numpy.asfortranarray(K)
 
-    lib.propagation_kernel(probabilities.ctypes.data_as(POINTER(c_double)),
-                           graph_ind.ctypes.data_as(POINTER(c_int)),
-                           w,
-                           int(p),
-                           num_nodes,
-                           num_classes,
-                           num_graphs,
-                           K.ctypes.data_as(POINTER(c_double)))
+    lib.calculate_propagation_kernel_contribution(probabilities.ctypes.data_as(POINTER(c_double)),
+                                                  graph_ind.ctypes.data_as(POINTER(c_int)),
+                                                  w,
+                                                  int(p),
+                                                  num_nodes,
+                                                  num_classes,
+                                                  num_graphs,
+                                                  K.ctypes.data_as(POINTER(c_double)))
 
     return K
