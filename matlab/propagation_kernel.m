@@ -30,7 +30,7 @@ function K = propagation_kernel(A, graph_ind, labels, train_ind, ...
     % calculate the kernel contribution at this height
     contribution = propagation_kernel_contribution(probabilities, ...
             graph_ind, w, use_cauchy);
-    contribution = contribution + contribution';
+    contribution = contribution + contribution' - diag(diag(contribution));
 
     if (take_sum)
       K = K + contribution;
