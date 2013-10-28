@@ -91,6 +91,8 @@ void mexFunction(int nlhs, mxArray *plhs[],
 	iteration = 0;
 	while (true) {
 
+		cout << "num_labels: " << num_labels << endl;
+
 		delete[] feature_vectors;
 		feature_vectors = new double[num_graphs * num_labels]();
 
@@ -108,7 +110,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
 		signature_hash.clear();
 		for (i = 0; i < num_nodes; i++) {
 			signature = (double)(labels[i]);
-			
+
 			num_neighbors = A_jc[i + 1] - A_jc[i];
 			for (j = 0; j < num_neighbors; j++, count++)
 				signature += random_offsets[labels[A_ir[count]] - 1];
@@ -123,7 +125,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
 
 		num_labels = num_new_labels;
 		memcpy(labels, new_labels, num_nodes * sizeof(int));
-		
+
 		iteration++;
 	}
 

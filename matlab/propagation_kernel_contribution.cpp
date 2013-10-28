@@ -12,16 +12,8 @@
 #define MAX(x, y) (((x) > (y)) ? (x) : (y));
 #define ROUND_TO_INT(x) ((int)((x) + 0.5))
 
-extern "C" {
-	void calculate_propagation_kernel_contribution(double *,
-																								 int *,
-																								 double,
-																								 int,
-																								 int,
-																								 int,
-																								 int,
-																								 double *);
-}
+void calculate_propagation_kernel_contribution(double *, int *,
+        double, int, int, int, int, double *);
 
 void mexFunction(int nlhs, mxArray *plhs[],
 								 int nrhs, const mxArray *prhs[])
@@ -47,12 +39,11 @@ void mexFunction(int nlhs, mxArray *plhs[],
 
 	p = (use_cauchy[0] ? 1 : 2);
 
-  KERNEL_MATRIX_ARG = mxCreateDoubleMatrix(num_graphs, num_graphs, mxREAL);
+	KERNEL_MATRIX_ARG = mxCreateDoubleMatrix(num_graphs, num_graphs, mxREAL);
 	kernel_matrix = mxGetPr(KERNEL_MATRIX_ARG);
 
-	calculate_propagation_kernel_contribution(probabilities, graph_ind,
-																						w, p, num_nodes, num_classes,
-																						num_graphs, kernel_matrix);
+	calculate_propagation_kernel_contribution(probabilities, graph_ind, w, p,
+	        num_nodes, num_classes,	num_graphs, kernel_matrix);
 
 	delete[] graph_ind;
 }
