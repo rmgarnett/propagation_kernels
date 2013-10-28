@@ -1,7 +1,7 @@
 function K = propagation_kernel(features, graph_ind, transformation, ...
                                 num_iterations, varargin)
 
-  `options = inputParser;
+  options = inputParser;
 
   options.addOptional('distance', 'l1', ...
                       @(x) ismember(lower(x), {'l1', 'l2', 'tv', 'hellinger'}));
@@ -20,7 +20,7 @@ function K = propagation_kernel(features, graph_ind, transformation, ...
 
   iteration = 0;
   while (true)
-    labels = calculate_hashes(featuers, graph_ind, options.distance, ...
+    labels = calculate_hashes(features, graph_ind, options.distance, ...
                               options.w);
 
     % aggregate counts on graphs
@@ -36,6 +36,8 @@ function K = propagation_kernel(features, graph_ind, transformation, ...
 
     % apply transformation to features for next step
     features = transformation(features);
+
+    iteration = iteration + 1;
   end
 
 end
