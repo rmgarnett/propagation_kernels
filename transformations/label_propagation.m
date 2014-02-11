@@ -1,3 +1,5 @@
+% Label propagation transformation given a training set.
+
 function features = label_propagation(features, A, train_ind, ...
           observed_labels)
 
