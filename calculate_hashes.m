@@ -20,7 +20,7 @@
 %
 % Usage:
 %
-%   labels = calculate_hashes(features, graph_ind, distance, w)
+%   labels = calculate_hashes(features, distance, w)
 %
 % Inputs:
 %
