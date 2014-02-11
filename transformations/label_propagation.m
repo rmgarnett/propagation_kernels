@@ -31,7 +31,7 @@
 %
 %   features: an (n x k) matrix containing the updated features.
 %
-% See also PROPAGATION_KERNEL.
+% See also PROPAGATION_KERNEL, LABEL_DIFFUSION.
 
 % Copyright (c) Roman Garnett, 2012--2014.
 
