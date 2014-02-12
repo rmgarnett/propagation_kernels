@@ -8,7 +8,7 @@
 %   Knowledge Discovery in Databases: European Conference, (ECML/PKDD
 %   2012), pp. 378-392.
 %
-% This implmentation supports (approximately) preserving any of the
+% This implementation supports (approximately) preserving any of the
 % following distances between the feature vectors:
 %
 %   - \ell^1 or \ell^2 for arbitrary feature vectors
@@ -25,7 +25,7 @@
 %
 %   features = transformation(features);
 %
-% Where the input is an (n x d) set of feature fectors, one for
+% Where the input is an (n x d) set of feature vectors, one for
 % each node, and the transformation function computes a new set of
 % features given an old set.
 %
@@ -37,7 +37,7 @@
 % Inputs:
 %
 %         features: an (n x d) matrix of feature vectors to hash. If
-%                   either the total variation or Helligner distances
+%                   either the total variation or Hellinger distances
 %                   is chosen, each row of this matrix should sum to
 %                   1.
 %        graph_ind: an (n x 1) vector indicating graph membership.
@@ -64,7 +64,7 @@
 %
 %                'l1': \ell^1
 %                'l2': \ell^2
-%                'tv': total variation distnace (equivalent to \ell^1)
+%                'tv': total variation distance (equivalent to \ell^1)
 %         'hellinger': Hellinger distance
 %
 %                 The input is not case sensitive. See

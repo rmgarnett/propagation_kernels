@@ -8,7 +8,7 @@
 %   Knowledge Discovery in Databases: European Conference, (ECML/PKDD
 %   2012), pp. 378-392.
 %
-% This implmentation supports (approximately) preserving any of the
+% This implementation supports (approximately) preserving any of the
 % following distances:
 %
 %   - \ell^1 or \ell^2 for arbitrary feature vectors
@@ -25,14 +25,14 @@
 % Inputs:
 %
 %    features: an (n x d) matrix of feature vectors to hash. If either
-%              the total variation or Helligner distances is chosen,
+%              the total variation or Hellinger distances is chosen,
 %              each row of this matrix should sum to 1.
 %    distance: a string indicating the distance; the following
 %              values are supported:
 %
 %                'l1': \ell^1
 %                'l2': \ell^2
-%                'tv': total variation distnace (equivalent to \ell^1)
+%                'tv': total variation distance (equivalent to \ell^1)
 %         'hellinger': Hellinger distance
 %
 %              The input is not case sensitive.
