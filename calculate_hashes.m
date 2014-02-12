@@ -55,7 +55,7 @@ function labels = calculate_hashes(features, distance, w)
   use_cauchy = (strcmpi(distance, 'l1') || strcmpi(distance, 'tv'));
   take_sqrt  = strcmpi(distance, 'hellinger');
 
-  [num_points, d] = size(features);
+  [~, d] = size(features);
 
   if (take_sqrt)
     features = sqrt(features);
