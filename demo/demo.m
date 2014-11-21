@@ -1,12 +1,12 @@
 rng('default');
 
 % transformation parameters
-num_train      = 1e3;    % number of nodes to use for the training set
+num_train      = 1e3;           % number of nodes to use for the training set
 
 % propagation kernel parameters
-num_iterations = 20;     % number of iterations
+num_iterations = 10;            % number of iterations
 
-% hashing
+% hashing parameters
 w              = 1e-2;          % bin width
 distance       = 'hellinger';   % distance to approximately preserve
 
@@ -53,7 +53,7 @@ transformation = @(features) label_diffusion(features, A);
 % replace the default linear base kernel with an RBF kernel
 length_scale = 3;
 base_kernel = @(counts) ...
-              exp(-(squareform(pdist(counts)).^2 / (2 * length_scale^2)));
+              exp(-(squareform(pdist(counts).^2) / (2 * length_scale^2)));
 
 % calculate the graph kernel again using the new parameters
 K = propagation_kernel(initial_features, graph_ind, transformation, ...
